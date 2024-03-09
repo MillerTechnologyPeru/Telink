@@ -40,6 +40,8 @@ public extension CentralManager {
     ) async throws -> AsyncIndefiniteStream<Event> where Event: SerialPortProtocolEvent, Event: Decodable {
         assert(characteristic.uuid == .telinkSerialPortProtocolNotification)
         let notifications = try await self.notify(for: characteristic)
+        // read
+        _ = try await self.readValue(for: characteristic)
         return AsyncIndefiniteStream<Event> { build in
             for try await data in notifications {
                 let message = try SerialPortProtocolMessage(from: data)
