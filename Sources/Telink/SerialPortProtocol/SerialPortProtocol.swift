@@ -16,6 +16,24 @@ public struct SerialPortProtocolMessage: Equatable, Hashable, Codable, Sendable 
     public let payload: Data
 }
 
+public extension SerialPortProtocolMessage {
+    
+    init(from data: Data) throws {
+        self = try Self.decoder.decode(SerialPortProtocolMessage.self, from: data)
+    }
+    
+    func encode() throws -> Data {
+        try Self.encoder.encode(self)
+    }
+}
+
+internal extension SerialPortProtocolMessage {
+    
+    static let encoder = TelinkEncoder()
+    
+    static let decoder = TelinkDecoder()
+}
+
 // MARK: - TelinkCodable
 
 extension SerialPortProtocolMessage: TelinkCodable {
