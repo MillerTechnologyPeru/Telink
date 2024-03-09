@@ -4,7 +4,7 @@ import XCTest
 final class TelinkTests: XCTestCase {
     
     func testSerialPortProtocolMessageEncoding() throws {
-        let encoder = TelinkEncoder()
+        let encoder = SerialPortProtocolMessage.encoder
         let data = Data(hexadecimal: "55AA0009FFF6DD0B1518DB")!
         let command = SerialPortProtocolMessage(
             type: 0x55AA,
@@ -16,7 +16,7 @@ final class TelinkTests: XCTestCase {
     }
     
     func testSerialPortProtocolMessageDecoding() throws {
-        let decoder = TelinkDecoder()
+        let decoder = SerialPortProtocolMessage.decoder
         let data = Data(hexadecimal: "55AA0008FFF7DD0B00D6")!
         let event = try decoder.decode(SerialPortProtocolMessage.self, from: data)
         XCTAssertEqual(event.type, 0x55AA)

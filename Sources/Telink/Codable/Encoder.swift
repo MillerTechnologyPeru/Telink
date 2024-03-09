@@ -18,9 +18,13 @@ public struct TelinkEncoder {
     /// Logging handler
     public var log: ((String) -> ())?
     
+    public var isLittleEndian: Bool
+    
     // MARK: - Initialization
     
-    public init() { }
+    public init(isLittleEndian: Bool = true) {
+        self.isLittleEndian = isLittleEndian
+    }
     
     // MARK: - Methods
     
@@ -30,7 +34,8 @@ public struct TelinkEncoder {
         let encoder = Encoder(
             userInfo: userInfo,
             log: log,
-            data: Data()
+            data: Data(),
+            isLittleEndian: isLittleEndian
         )
         // encode value
         if let _ = value as? TelinkEncodable {
@@ -69,18 +74,22 @@ internal extension TelinkEncoder {
         
         fileprivate(set) var data: Data
         
+        let isLittleEndian: Bool
+        
         // MARK: - Initialization
         
         fileprivate init(
             codingPath: [CodingKey] = [],
             userInfo: [CodingUserInfoKey : Any],
             log: ((String) -> ())?,
-            data: Data
+            data: Data,
+            isLittleEndian: Bool
         ) {
             self.codingPath = codingPath
             self.userInfo = userInfo
             self.log = log
             self.data = data
+            self.isLittleEndian = isLittleEndian
         }
         
         // MARK: - Encoder
@@ -118,17 +127,17 @@ internal extension TelinkEncoder.Encoder {
         return try boxLengthPrefixString(value)
     }
     
-    func boxInteger <T: TelinkRawEncodable & FixedWidthInteger> (_ value: T, isLittleEndian: Bool = true) -> Data {
+    func boxInteger <T: TelinkRawEncodable & FixedWidthInteger> (_ value: T) -> Data {
         let endianValue = isLittleEndian ? value.littleEndian : value.bigEndian
         return withUnsafePointer(to: endianValue, { Data(bytes: $0, count: MemoryLayout<T>.size) })
     }
     
-    func boxDouble(_ double: Double, isLittleEndian: Bool = true) -> Data {
-        return boxInteger(double.bitPattern, isLittleEndian: isLittleEndian)
+    func boxDouble(_ double: Double) -> Data {
+        return boxInteger(double.bitPattern)
     }
     
-    func boxFloat(_ float: Float, isLittleEndian: Bool = true) -> Data {
-        return boxInteger(float.bitPattern, isLittleEndian: isLittleEndian)
+    func boxFloat(_ float: Float) -> Data {
+        return boxInteger(float.bitPattern)
     }
     
     func writeEncodable <T: Encodable> (_ value: T) throws {
@@ -291,11 +300,11 @@ internal struct TelinkKeyedEncodingContainer <K : CodingKey> : KeyedEncodingCont
     
     // MARK: Private Methods
     
-    private func encodeNumeric <T: TelinkRawEncodable & FixedWidthInteger> (_ value: T, forKey key: K, isLittleEndian: Bool = true) throws {
+    private func encodeNumeric <T: TelinkRawEncodable & FixedWidthInteger> (_ value: T, forKey key: K) throws {
         
         self.encoder.codingPath.append(key)
         defer { self.encoder.codingPath.removeLast() }
-        let data = encoder.boxInteger(value, isLittleEndian: isLittleEndian)
+        let data = encoder.boxInteger(value)
         try setValue(value, data: data, for: key)
     }
     
@@ -326,6 +335,10 @@ public struct TelinkEncodingContainer {
     /// The path of coding keys taken to get to this point in encoding.
     public let codingPath: [CodingKey]
     
+    public var isLittleEndian: Bool {
+        encoder.isLittleEndian
+    }
+    
     // MARK: - Initialization
     
     fileprivate init(referencing encoder: TelinkEncoder.Encoder) {
@@ -343,40 +356,40 @@ public struct TelinkEncodingContainer {
         try encodeTelink(value)
     }
     
-    public func encode(_ value: Int16, isLittleEndian: Bool = true) throws {
-        try encodeNumeric(value, isLittleEndian: isLittleEndian)
+    public func encode(_ value: Int16) throws {
+        try encodeNumeric(value)
     }
     
-    public func encode(_ value: Int32, isLittleEndian: Bool = true) throws {
-        try encodeNumeric(value, isLittleEndian: isLittleEndian)
+    public func encode(_ value: Int32) throws {
+        try encodeNumeric(value)
     }
     
-    public func encode(_ value: Int64, isLittleEndian: Bool = true) throws {
-        try encodeNumeric(value, isLittleEndian: isLittleEndian)
+    public func encode(_ value: Int64) throws {
+        try encodeNumeric(value)
     }
     
     public func encode(_ value: UInt8) throws {
         try encodeTelink(value)
     }
     
-    public func encode(_ value: UInt16, isLittleEndian: Bool = true) throws {
-        try encodeNumeric(value, isLittleEndian: isLittleEndian)
+    public func encode(_ value: UInt16) throws {
+        try encodeNumeric(value)
     }
     
-    public func encode(_ value: UInt32, isLittleEndian: Bool = true) throws {
-        try encodeNumeric(value, isLittleEndian: isLittleEndian)
+    public func encode(_ value: UInt32) throws {
+        try encodeNumeric(value)
     }
     
-    public func encode(_ value: UInt64, isLittleEndian: Bool = true) throws {
-        try encodeNumeric(value, isLittleEndian: isLittleEndian)
+    public func encode(_ value: UInt64) throws {
+        try encodeNumeric(value)
     }
     
-    public func encode(_ value: Float, isLittleEndian: Bool = true) throws {
-        try encodeNumeric(value.bitPattern, isLittleEndian: isLittleEndian)
+    public func encode(_ value: Float) throws {
+        try encodeNumeric(value.bitPattern)
     }
     
-    public func encode(_ value: Double, isLittleEndian: Bool = true) throws {
-        try encodeNumeric(value.bitPattern, isLittleEndian: isLittleEndian)
+    public func encode(_ value: Double) throws {
+        try encodeNumeric(value.bitPattern)
     }
     
     public func encode <T: Encodable> (_ value: T, forKey key: CodingKey) throws {
@@ -412,13 +425,12 @@ public struct TelinkEncodingContainer {
         try setValue(string, data: data)
     }
     
-    private func encodeNumeric <T: TelinkRawEncodable & FixedWidthInteger> (_ value: T, isLittleEndian: Bool = true) throws {
-        let data = encoder.boxInteger(value, isLittleEndian: isLittleEndian)
+    private func encodeNumeric <T: TelinkRawEncodable & FixedWidthInteger> (_ value: T) throws {
+        let data = encoder.boxInteger(value)
         try setValue(value, data: data)
     }
     
     private func encodeTelink <T: TelinkRawEncodable> (_ value: T) throws {
-        
         let data = encoder.box(value)
         try setValue(value, data: data)
     }

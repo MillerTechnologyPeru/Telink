@@ -18,9 +18,13 @@ public struct TelinkDecoder {
     /// Logger handler
     public var log: ((String) -> ())?
     
+    public var isLittleEndian: Bool
+    
     // MARK: - Initialization
     
-    public init() { }
+    public init(isLittleEndian: Bool = true) {
+        self.isLittleEndian = isLittleEndian
+    }
     
     // MARK: - Methods
     
@@ -31,7 +35,8 @@ public struct TelinkDecoder {
         let decoder = Decoder(
             userInfo: userInfo,
             log: log,
-            data: data
+            data: data,
+            isLittleEndian: isLittleEndian
         )
         
         assert(decoder.codingPath.isEmpty)
@@ -70,6 +75,8 @@ internal extension TelinkDecoder {
         
         let data: Data
         
+        let isLittleEndian: Bool
+        
         fileprivate(set) var offset: Int = 0
         
         // MARK: - Initialization
@@ -78,12 +85,14 @@ internal extension TelinkDecoder {
             codingPath: [CodingKey] = [],
             userInfo: [CodingUserInfoKey : Any],
             log: ((String) -> ())?,
-            data: Data
+            data: Data,
+            isLittleEndian: Bool
         ) {
             self.codingPath = codingPath
             self.userInfo = userInfo
             self.log = log
             self.data = data
+            self.isLittleEndian = isLittleEndian
         }
         
         // MARK: - Methods
@@ -111,6 +120,10 @@ internal extension TelinkDecoder {
 // MARK: - Unboxing Values
 
 internal extension TelinkDecoder.Decoder {
+    
+    var remainingBytes: Int {
+        data.count - offset
+    }
     
     func peek() -> UInt8 {
         return self.data[offset]
@@ -155,7 +168,7 @@ internal extension TelinkDecoder.Decoder {
         return try readLengthPrefixString()
     }
     
-    func readNumeric <T: TelinkRawDecodable & FixedWidthInteger> (_ type: T.Type, isLittleEndian: Bool = true) throws -> T {
+    func readNumeric <T: TelinkRawDecodable & FixedWidthInteger> (_ type: T.Type) throws -> T {
         let value = try read(type)
         return isLittleEndian ? T.init(littleEndian: value) : T.init(bigEndian: value)
     }
@@ -192,14 +205,10 @@ internal extension TelinkDecoder.Decoder {
 private extension TelinkDecoder.Decoder {
     
     func readData() throws -> Data {
-        
-        let length = try Int(UInt16(bigEndian: read(UInt16.self)))
-        let data = try read(length, copying: true)
-        return data
+        try read(remainingBytes, copying: true)
     }
     
     func readDate() throws -> Date {
-        
         let timeInterval = try readNumeric(Int32.self)
         return Date(timeIntervalSince1970: TimeInterval(timeInterval))
     }
@@ -389,14 +398,17 @@ public struct TelinkDecodingContainer {
     public let codingPath: [CodingKey]
     
     public var remainingBytes: Int {
-        decoder.data.count - decoder.offset
+        decoder.remainingBytes
+    }
+    
+    public var isLittleEndian: Bool {
+        decoder.isLittleEndian
     }
     
     // MARK: Initialization
     
     /// Initializes `self` by referencing the given decoder and container.
     fileprivate init(referencing decoder: TelinkDecoder.Decoder) {
-        
         self.decoder = decoder
         self.codingPath = decoder.codingPath
     }
@@ -411,41 +423,41 @@ public struct TelinkDecodingContainer {
         return try decodeTelink(type)
     }
     
-    public func decode(_ type: Int16.Type, isLittleEndian: Bool = false) throws -> Int16 {
-        return try decodeNumeric(type, isLittleEndian: isLittleEndian)
+    public func decode(_ type: Int16.Type) throws -> Int16 {
+        return try decodeNumeric(type)
     }
     
-    public func decode(_ type: Int32.Type, isLittleEndian: Bool = false) throws -> Int32 {
-        return try decodeNumeric(type, isLittleEndian: isLittleEndian)
+    public func decode(_ type: Int32.Type) throws -> Int32 {
+        return try decodeNumeric(type)
     }
     
-    public func decode(_ type: Int64.Type, isLittleEndian: Bool = false) throws -> Int64 {
-        return try decodeNumeric(type, isLittleEndian: isLittleEndian)
+    public func decode(_ type: Int64.Type) throws -> Int64 {
+        return try decodeNumeric(type)
     }
     
     public func decode(_ type: UInt8.Type) throws -> UInt8 {
         return try decodeTelink(type)
     }
     
-    public func decode(_ type: UInt16.Type, isLittleEndian: Bool = false) throws -> UInt16 {
-        return try decodeNumeric(type, isLittleEndian: isLittleEndian)
+    public func decode(_ type: UInt16.Type) throws -> UInt16 {
+        return try decodeNumeric(type)
     }
     
-    public func decode(_ type: UInt32.Type, isLittleEndian: Bool = false) throws -> UInt32 {
-        return try decodeNumeric(type, isLittleEndian: isLittleEndian)
+    public func decode(_ type: UInt32.Type) throws -> UInt32 {
+        return try decodeNumeric(type)
     }
     
-    public func decode(_ type: UInt64.Type, isLittleEndian: Bool = false) throws -> UInt64 {
-        return try decodeNumeric(type, isLittleEndian: isLittleEndian)
+    public func decode(_ type: UInt64.Type) throws -> UInt64 {
+        return try decodeNumeric(type)
     }
     
-    public func decode(_ type: Float.Type, isLittleEndian: Bool = false) throws -> Float {
-        let bitPattern = try decodeNumeric(UInt32.self, isLittleEndian: isLittleEndian)
+    public func decode(_ type: Float.Type) throws -> Float {
+        let bitPattern = try decodeNumeric(UInt32.self)
         return Float(bitPattern: bitPattern)
     }
     
-    public func decode(_ type: Double.Type, isLittleEndian: Bool = false) throws -> Double {
-        let bitPattern = try decodeNumeric(UInt64.self, isLittleEndian: isLittleEndian)
+    public func decode(_ type: Double.Type) throws -> Double {
+        let bitPattern = try decodeNumeric(UInt64.self)
         return Double(bitPattern: bitPattern)
     }
     
@@ -521,15 +533,13 @@ public struct TelinkDecodingContainer {
     
     /// Decode native value type from Telink data.
     private func decodeTelink <T: TelinkRawDecodable> (_ type: T.Type) throws -> T {
-        
         self.decoder.log?("Will read \(T.self)")
         return try self.decoder.read(T.self)
     }
     
-    private func decodeNumeric <T: TelinkRawDecodable & FixedWidthInteger> (_ type: T.Type, isLittleEndian: Bool = false) throws -> T {
-        
+    private func decodeNumeric <T: TelinkRawDecodable & FixedWidthInteger> (_ type: T.Type) throws -> T {
         self.decoder.log?("Will read \(T.self)")
-        return try self.decoder.readNumeric(T.self, isLittleEndian: isLittleEndian)
+        return try self.decoder.readNumeric(T.self)
     }
 }
 
@@ -704,31 +714,6 @@ internal struct TelinkUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     }
     
     mutating func superDecoder() throws -> Decoder {
-        /*
-        // set coding key context
-        self.decoder.codingPath.append(Index(intValue: currentIndex))
-        defer { self.decoder.codingPath.removeLast() }
-        
-        // log
-        self.decoder.log?("Requested super decoder for path \"\(self.decoder.codingPath.path)\"")
-        
-        // check for end of array
-        try assertNotEnd()
-        
-        // get item
-        let item = container[currentIndex]
-        
-        // increment counter
-        self.currentIndex += 1
-        
-        // create new decoder
-        let decoder = TelinkDecoder.Decoder(referencing: .item(item),
-                                            at: self.decoder.codingPath,
-                                            userInfo: self.decoder.userInfo,
-                                            log: self.decoder.log,
-                                            options: self.decoder.options)
-        
-        return decoder*/
         fatalError()
     }
     
@@ -736,9 +721,7 @@ internal struct TelinkUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     
     @inline(__always)
     private func assertNotEnd() throws {
-        
         guard isAtEnd == false else {
-            
             throw DecodingError.valueNotFound(Any?.self, DecodingError.Context(codingPath: self.decoder.codingPath + [Index(intValue: self.currentIndex)], debugDescription: "Unkeyed container is at end."))
         }
     }

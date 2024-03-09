@@ -30,24 +30,7 @@ public extension SerialPortProtocolMessage {
 
 internal extension SerialPortProtocolMessage {
     
-    static let encoder = TelinkEncoder()
+    static let encoder = TelinkEncoder(isLittleEndian: false)
     
-    static let decoder = TelinkDecoder()
-}
-
-// MARK: - TelinkCodable
-
-extension SerialPortProtocolMessage: TelinkCodable {
-    
-    public init(from container: TelinkDecodingContainer) throws {
-        self.type = SerialPortProtocolType(rawValue: try container.decode(UInt16.self, isLittleEndian: false))
-        self.length = try container.decode(UInt16.self, isLittleEndian: false)
-        self.payload = try container.decode(Data.self, length: container.remainingBytes)
-    }
-    
-    public func encode(to container: TelinkEncodingContainer) throws {
-        try container.encode(type.rawValue, isLittleEndian: false)
-        try container.encode(length, isLittleEndian: false)
-        try container.encode(payload, forKey: CodingKeys.payload)
-    }
+    static let decoder = TelinkDecoder(isLittleEndian: false)
 }

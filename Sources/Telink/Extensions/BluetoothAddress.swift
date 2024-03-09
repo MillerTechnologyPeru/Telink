@@ -13,10 +13,12 @@ import Bluetooth
 extension BluetoothAddress: TelinkCodable {
     
     public init(from container: TelinkDecodingContainer) throws {
-        self = try container.decode(length: 6) { BluetoothAddress(data: $0)?.littleEndian }
+        let address = try container.decode(length: 6) { BluetoothAddress(data: $0) }
+        self = container.isLittleEndian ? address.littleEndian : address.bigEndian
     }
     
     public func encode(to container: TelinkEncodingContainer) throws {
-        try container.encode(littleEndian.data)
+        let data = container.isLittleEndian ? littleEndian.data : bigEndian.data
+        try container.encode(data)
     }
 }
