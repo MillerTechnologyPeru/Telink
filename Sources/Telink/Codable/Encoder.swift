@@ -182,7 +182,7 @@ private extension TelinkEncoder.Encoder {
     }
     
     func writeDate(_ value: Date) throws {
-        let timeInterval = Int32(value.timeIntervalSince1970)
+        let timeInterval = UInt32(value.timeIntervalSince1970)
         write(boxInteger(timeInterval))
     }
 }
@@ -204,7 +204,6 @@ internal struct TelinkKeyedEncodingContainer <K : CodingKey> : KeyedEncodingCont
     // MARK: - Initialization
     
     init(referencing encoder: TelinkEncoder.Encoder) {
-        
         self.encoder = encoder
         self.codingPath = encoder.codingPath
     }

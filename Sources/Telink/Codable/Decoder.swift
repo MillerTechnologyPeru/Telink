@@ -209,7 +209,7 @@ private extension TelinkDecoder.Decoder {
     }
     
     func readDate() throws -> Date {
-        let timeInterval = try readNumeric(Int32.self)
+        let timeInterval = try readNumeric(UInt32.self)
         return Date(timeIntervalSince1970: TimeInterval(timeInterval))
     }
     
