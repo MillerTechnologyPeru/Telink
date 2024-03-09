@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Telink SPP message
 public struct SerialPortProtocolMessage: Equatable, Hashable, Codable, Sendable {
     
     public let type: SerialPortProtocolType

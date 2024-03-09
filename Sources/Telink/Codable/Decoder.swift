@@ -8,7 +8,7 @@
 import Foundation
 
 /// Telink Decoder
-internal struct TelinkDecoder {
+public struct TelinkDecoder {
     
     // MARK: - Properties
     
