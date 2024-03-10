@@ -8,7 +8,6 @@ final class TelinkTests: XCTestCase {
         let data = Data(hexadecimal: "55AA0009FFF6DD0B1518DB")!
         let command = SerialPortProtocolMessage(
             type: 0x55AA,
-            length: 9,
             payload: Data(hexadecimal: "FFF6DD0B1518DB")!
         )
         let encodedData = try encoder.encode(command)
