@@ -25,7 +25,6 @@ public extension SerialPortProtocolMessage {
         let payload = try Self.encoder.encode(command)
         self.init(
             type: type,
-            length: UInt16(payload.count),
             payload: payload
         )
     }

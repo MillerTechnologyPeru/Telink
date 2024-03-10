@@ -12,9 +12,15 @@ public struct SerialPortProtocolMessage: Equatable, Hashable, Codable, Sendable 
     
     public let type: SerialPortProtocolType
     
-    public let length: UInt16
+    internal let length: UInt16
     
     public let payload: Data
+    
+    public init(type: SerialPortProtocolType, payload: Data) {
+        self.type = type
+        self.payload = payload
+        self.length = UInt16(payload.count) + 2
+    }
 }
 
 public extension SerialPortProtocolMessage {
