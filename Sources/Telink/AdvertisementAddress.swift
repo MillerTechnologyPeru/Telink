@@ -183,3 +183,18 @@ extension TelinkAdvertisement.Address: RandomAccessCollection {
         return i + 1
     }
 }
+
+// MARK: - Codable
+
+extension TelinkAdvertisement.Address: TelinkCodable {
+    
+    public init(from container: TelinkDecodingContainer) throws {
+        let address = try container.decode(length: 4) { TelinkAdvertisement.Address(data: $0) }
+        self = container.isLittleEndian ? address.littleEndian : address.bigEndian
+    }
+    
+    public func encode(to container: TelinkEncodingContainer) throws {
+        let data = container.isLittleEndian ? littleEndian.data : bigEndian.data
+        try container.encode(data)
+    }
+}
