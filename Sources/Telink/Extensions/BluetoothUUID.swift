@@ -11,7 +11,7 @@ import Bluetooth
 public extension BluetoothUUID {
     
     static var telinkSerialPortProtocolService: BluetoothUUID {
-        return BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D1910")!
+        BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D1910")!
     }
     
     static var telinkSerialPortProtocolNotification: BluetoothUUID {
@@ -22,23 +22,23 @@ public extension BluetoothUUID {
         BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D2B11")!
     }
     
-    static var meshLightAccessService: BluetoothUUID {
-        return BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D1910")!
+    static var telinkMeshService: BluetoothUUID {
+        BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D1910")!
     }
     
-    static var meshLightStatusCharacteristic: BluetoothUUID {
-        return BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D1911")!
+    static var telinkStatusCharacteristic: BluetoothUUID {
+        BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D1911")!
     }
     
-    static var meshLightCommandCharacteristic: BluetoothUUID {
-        return BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D1912")!
+    static var telinkCommandCharacteristic: BluetoothUUID {
+        BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D1912")!
     }
     
-    static var meshLightFirmwareUpdateCharacteristic: BluetoothUUID {
-        return BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D1913")!
+    static var telinkFirmwareUpdateCharacteristic: BluetoothUUID {
+        BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D1913")!
     }
     
-    static var meshLightPairingCharacteristic: BluetoothUUID {
-        return BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D1914")!
+    static var telinkPairingCharacteristic: BluetoothUUID {
+        BluetoothUUID(rawValue: "00010203-0405-0607-0809-0A0B0C0D1914")!
     }
 }
