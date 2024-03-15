@@ -27,6 +27,15 @@ public extension TelinkAdvertisement {
     }
 }
 
+extension TelinkAdvertisement: Identifiable {
+    
+    public var id: String {
+        name
+        + "/" + manufacturerData.vendor.rawValue.toHexadecimal()
+        + "/" + manufacturerData.address.rawValue
+    }
+}
+
 public extension TelinkAdvertisement {
     
     init?(name: String, manufacturerData: GATT.ManufacturerSpecificData) {
