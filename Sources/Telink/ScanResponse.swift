@@ -20,6 +20,8 @@ public struct TelinkScanResponse: Equatable, Hashable, Codable, Sendable {
     public let status: UInt8
     
     public let mesh: UInt16
+    
+    public let additionalData: Data
 }
 
 public extension TelinkScanResponse {
