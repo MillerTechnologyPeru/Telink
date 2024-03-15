@@ -25,7 +25,7 @@ public extension AccessoryManager {
         guard bluetoothState == .poweredOn else {
             throw TelinkAppError.bluetoothUnavailable
         }
-        let filterDuplicates = true //preferences.filterDuplicates
+        let filterDuplicates = false //preferences.filterDuplicates
         self.peripherals.removeAll(keepingCapacity: true)
         stopScanning()
         let scanStream = central.scan(
@@ -88,14 +88,17 @@ internal extension AccessoryManager {
     }
     
     func found(_ scanData: ScanData<NativeCentral.Peripheral, NativeCentral.Advertisement>) -> Bool {
-        if let manufacturerData = scanData.advertisementData.manufacturerData,
-                  let scanResponse = TelinkScanResponse(manufacturerData: manufacturerData) {
-            self.scanResponses[scanData.peripheral] = scanResponse
-            return true
-        } else if let advertisement = TelinkAdvertisement(scanData.advertisementData) {
+        guard let manufacturerData = scanData.advertisementData.manufacturerData, manufacturerData.companyIdentifier == .telinkSemiconductor else {
+            return false
+        }
+        if let advertisement = TelinkAdvertisement(scanData.advertisementData) {
             self.peripherals[scanData.peripheral] = advertisement
             return true
+        } else if let scanResponse = TelinkScanResponse(manufacturerData: manufacturerData) {
+            self.scanResponses[scanData.peripheral] = scanResponse
+            return true
         } else {
+            assertionFailure()
             return false
         }
     }
