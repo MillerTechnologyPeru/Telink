@@ -91,5 +91,10 @@ final class AdvertisementTests: XCTestCase {
         
         XCTAssertEqual(advertisement.vendor, .telinkSemiconductor)
         XCTAssertEqual(advertisement.address.rawValue, "43:21:73:78")
+        XCTAssertEqual(advertisement.productType, 96)
+        XCTAssertEqual(advertisement.status, 1)
+        XCTAssertEqual(advertisement.mesh, 75)
+        XCTAssertEqual(advertisement.additionalData, Data([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]))
+        XCTAssertEqual(advertisement.additionalData.count, 16)
     }
 }
